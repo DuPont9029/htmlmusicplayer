@@ -1,18 +1,324 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF_8">
-        <title>FIGLOIODELLESTELLATO</title>
-        <link rel="stylesheet" type="text/css" href="ayo.css"
-    </head>
-    <body>
-        <audio src="fiorellato.mp3" id="lol" autoplay></audio>
-        <script>
-            window.onload = function() {
-                document.getElementById('lol').play();
-            }
-        </script>
+<head>
+  <meta charset="UTF-8">
+  <title>DuPont9029 Music Player</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+    }
 
-        <div class="centrato grande" >SEI STATO FIORELLATO</div>
-    </body>
+    input[type="file"] {
+      margin-bottom: 20px;
+      width: 200px;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 10px 20px;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+
+    .play-pause-button {
+      background-color: #007bff;
+    }
+
+
+    button:hover {
+      opacity: 0.8;
+    }
+
+    .audio-controls {
+      margin-bottom: 20px;
+    }
+
+    .audio-animation {
+      width: 300px;
+      height: 100px;
+      background-color: #f2f2f2;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .audio-wave {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 0;
+      background-color: #007bff;
+      opacity: 0.5;
+      animation: none;
+    }
+
+    .volume-controls {
+      margin-top: 10px;
+    }
+
+    .volume-controls button {
+      width: 30px;
+      height: 30px;
+      margin-right: 5px;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      background-color: #2c7da0;
+    }
+
+    .speed-controls {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .speed-controls button {
+      padding: 5px 10px;
+      margin: 5px;
+      background-color: #1b5f85;
+    }
+
+    .header {
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 0 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      color: #fff;
+      color: black;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    a {
+      text-align: right;
+      width: 40px;
+      height: 40px;
+    }
+
+    img {
+      text-align: left;
+      width: 40px;
+      height: 40px;
+    }
+
+    .destra {
+      text-align: right;
+      width: 40px;
+      height: 40px;
+    }
+    
+
+  
+    .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    color: #fff;
+    background-color: #000;
+  }
+
+  .header h1 {
+    flex-grow: 1;
+    text-align: center;
+  }
+
+  .destra {
+    margin-left: auto;
+  }
+
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="https://github.com/DuPont9029"><img src="https://raw.githubusercontent.com/DuPont9029/equ2g/main/github.ico" class="destra"></a>
+    <h1>DuPont9029 Music Player</h1>
+  </header>
+
+  <input type="file" id="audioFileInput" multiple>
+  <div class="audio-controls">
+    <button class="play-pause-button" onclick="togglePlayPause()">Play/Pausa</button>
+  </div>
+
+  <div class="audio-animation">
+    <canvas id="audioCanvas" width="300" height="100"></canvas>
+  </div>
+
+  <div class="volume-controls">
+    <button onclick="decreaseVolume()">-</button>
+    <button onclick="increaseVolume()">+</button>
+  </div>
+
+  <div class="speed-controls">
+    <button onclick="changePlaybackSpeed(0.25)">0.25x</button>
+    <button onclick="changePlaybackSpeed(0.5)">0.5x</button>
+    <button onclick="changePlaybackSpeed(0.75)">0.75x</button>
+    <button onclick="changePlaybackSpeed(1)">Normale</button>
+    <button onclick="changePlaybackSpeed(1.25)">1.25x</button>
+    <button onclick="changePlaybackSpeed(1.5)">1.5x</button>
+    <button onclick="changePlaybackSpeed(1.75)">1.75x</button>
+    <button onclick="changePlaybackSpeed(2)">2x</button>
+  </div>
+
+  <script>
+    var audioFiles = [];
+    var currentFileIndex = 0;
+    var audioElement;
+    var audioCanvas = document.getElementById('audioCanvas');
+    var audioWave = document.querySelector('.audio-wave');
+    var canvasContext = audioCanvas.getContext('2d');
+    var volume = 1.0;
+    var pausedTime = 0;
+
+    function togglePlayPause() {
+      if (audioElement && !audioElement.paused) {
+        pauseAudio();
+      } else {
+        playAudio();
+      }
+    }
+
+    function playAudio() {
+      var fileInput = document.getElementById('audioFileInput');
+      audioFiles = Array.from(fileInput.files);
+
+      if (audioFiles.length > 0) {
+        if (audioElement) {
+          audioElement.pause();
+        }
+
+        audioElement = new Audio();
+        audioElement.src = URL.createObjectURL(audioFiles[currentFileIndex]);
+        audioElement.currentTime = pausedTime || 0;
+
+        var audioContext = new AudioContext();
+        var source = audioContext.createMediaElementSource(audioElement);
+        var analyser = audioContext.createAnalyser();
+        analyser.fftSize = 512;
+
+        source.connect(analyser);
+        analyser.connect(audioContext.destination);
+
+        var bufferLength = analyser.frequencyBinCount;
+        var dataArray = new Uint8Array(bufferLength);
+
+        audioElement.onended = function() {
+          currentFileIndex++;
+          if (currentFileIndex < audioFiles.length) {
+            playNextAudio();
+          } else {
+            currentFileIndex = 0;
+            audioFiles = [];
+            audioElement = null;
+          }
+        };
+
+        audioElement.play();
+
+        function draw() {
+          var WIDTH = audioCanvas.width;
+          var HEIGHT = audioCanvas.height;
+
+          requestAnimationFrame(draw);
+
+          analyser.getByteTimeDomainData(dataArray);
+
+          canvasContext.fillStyle = '#f2f2f2';
+          canvasContext.fillRect(0, 0, WIDTH, HEIGHT);
+
+          canvasContext.lineWidth = 2;
+          canvasContext.strokeStyle = '#007bff';
+
+          canvasContext.beginPath();
+
+          var sliceWidth = WIDTH * 1.0 / bufferLength;
+          var x = 0;
+
+          for (var i = 0; i < bufferLength; i++) {
+            var v = dataArray[i] / 128.0;
+            var y = v * HEIGHT / 2;
+
+            if (i === 0) {
+              canvasContext.moveTo(x, y);
+            } else {
+              canvasContext.lineTo(x, y);
+            }
+
+            x += sliceWidth;
+          }
+
+          canvasContext.lineTo(audioCanvas.width, audioCanvas.height / 2);
+          canvasContext.stroke();
+        }
+
+        draw();
+      }
+    }
+
+    function pauseAudio() {
+      if (audioElement) {
+        audioElement.pause();
+        pausedTime = audioElement.currentTime;
+      }
+    }
+
+    function playNextAudio() {
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.src = URL.createObjectURL(audioFiles[currentFileIndex]);
+        audioElement.currentTime = 0;
+        audioElement.play();
+      }
+    }
+
+    function decreaseVolume() {
+      if (audioElement) {
+        volume -= 0.1;
+        if (volume < 0) {
+          volume = 0;
+        }
+        audioElement.volume = volume;
+      }
+    }
+
+    function increaseVolume() {
+      if (audioElement) {
+        volume += 0.1;
+        if (volume > 1) {
+          volume = 1;
+        }
+        audioElement.volume = volume;
+      }
+    }
+
+    function changePlaybackSpeed(speed) {
+      if (audioElement) {
+        audioElement.playbackRate = speed;
+      }
+    }
+  </script>
+</body>
 </html>
