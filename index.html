@@ -171,6 +171,15 @@
         min-height: calc(100vh - 40px); /* Riduci l'altezza del body di 40px per compensare il padding */
       }
     }
+    
+    .speed-controls select {
+  padding: 5px 10px;
+  margin: 5px;
+  background-color: #1b5f85;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+}
 
   </style>
 </head>
@@ -182,28 +191,58 @@
 
   <input type="file" id="audioFileInput" multiple>
   <div class="audio-controls">
-    <button class="play-pause-button" onclick="togglePlayPause()">Play/Pausa</button>
-  </div>
+    <div class="audio-controls">
+  <input type="range" id="audioProgress" min="0" value="0" step="1" onchange="seekAudio()">
+  <button class="play-pause-button" onclick="togglePlayPause()">Play/Pausa</button>
+  
+  
+</div>
+  
+  
+   <div class="speed-controls">
+  <select id="speedSelect" onchange="changePlaybackSpeed(this.value)">
+    <option value="0.25">0.25x</option>
+    <option value="0.5">0.5x</option>
+    <option value="0.75">0.75x</option>
+    <option value="1" selected>Normale</option>
+    <option value="1.25">1.25x</option>
+    <option value="1.5">1.5x</option>
+    <option value="1.75">1.75x</option>
+    <option value="2">2x</option>
+  </select>
+</div>
 
+
+  </div>
+  <!-- boom -->
+  <!--
+  <div class="speed-controls">
+  <select id="speedSelect" onchange="changePlaybackSpeed(this.value)">
+    <option value="0.25">0.25x</option>
+    <option value="0.5">0.5x</option>
+    <option value="0.75">0.75x</option>
+    <option value="1" selected>Normale</option>
+    <option value="1.25">1.25x</option>
+    <option value="1.5">1.5x</option>
+    <option value="1.75">1.75x</option>
+    <option value="2">2x</option>
+  </select>
+</div>
+-->
+<!-- boom -->
   <div class="audio-animation">
     <canvas id="audioCanvas" width="300" height="100"></canvas>
   </div>
 
+  <span id="timeIndicator">0:00 / 0:00</span>
+
+
   <div class="volume-controls">
-    <button onclick="decreaseVolume()">-</button>
-    <button onclick="increaseVolume()">+</button>
+    <button onclick="skipBackward()">-</button>
+    <button onclick="skipForward()">+</button>
   </div>
 
-  <div class="speed-controls">
-    <button onclick="changePlaybackSpeed(0.25)">0.25x</button>
-    <button onclick="changePlaybackSpeed(0.5)">0.5x</button>
-    <button onclick="changePlaybackSpeed(0.75)">0.75x</button>
-    <button onclick="changePlaybackSpeed(1)">Normale</button>
-    <button onclick="changePlaybackSpeed(1.25)">1.25x</button>
-    <button onclick="changePlaybackSpeed(1.5)">1.5x</button>
-    <button onclick="changePlaybackSpeed(1.75)">1.75x</button>
-    <button onclick="changePlaybackSpeed(2)">2x</button>
-  </div>
+  
 
   <script>
     var audioFiles = [];
@@ -298,6 +337,11 @@
 
         draw();
       }
+      
+      audioElement.play();
+
+  audioElement.addEventListener('timeupdate', updateProgress);
+
     }
 
     function pauseAudio() {
@@ -315,7 +359,8 @@
         audioElement.play();
       }
     }
-
+    
+    /*
     function decreaseVolume() {
       if (audioElement) {
         volume -= 0.1;
@@ -335,12 +380,75 @@
         audioElement.volume = volume;
       }
     }
+    
+    */
+    
+    function skipForward() {
+  if (audioElement) {
+    audioElement.currentTime += 5;
+  }
+}
+
+function skipBackward() {
+  if (audioElement) {
+    audioElement.currentTime -= 5;
+  }
+}
+    
+    
 
     function changePlaybackSpeed(speed) {
       if (audioElement) {
         audioElement.playbackRate = speed;
       }
     }
+    
+    /*
+    function updateProgress() {
+  var audioProgress = document.getElementById('audioProgress');
+  var progress = (audioElement.currentTime / audioElement.duration) * 100;
+  audioProgress.value = progress;
+}
+  */
+  
+  function updateProgress() {
+  var audioProgress = document.getElementById('audioProgress');
+  var currentTime = formatTime(audioElement.currentTime);
+  var duration = formatTime(audioElement.duration);
+  var progress = (audioElement.currentTime / audioElement.duration) * 100;
+
+  audioProgress.value = progress;
+  audioProgress.setAttribute('aria-valuenow', progress);
+
+  var progressText = currentTime + ' / ' + duration;
+  audioProgress.setAttribute('aria-valuetext', progressText);
+
+  var timeIndicator = document.getElementById('timeIndicator');
+timeIndicator.textContent = formatTime(audioElement.currentTime) + ' / ' + formatTime(audioElement.duration);
+}
+  
+  
+function formatTime(time) {
+  var minutes = Math.floor(time / 60);
+  var seconds = Math.floor(time % 60);
+  seconds = seconds < 10 ? '0' + seconds : seconds;
+  return minutes + ':' + seconds;
+}
+  
+  
+  
+    function seekAudio() {
+  var audioProgress = document.getElementById('audioProgress');
+  var seekTime = audioElement.duration * (audioProgress.value / 100);
+  audioElement.currentTime = seekTime;
+}
+    
+    function changePlaybackSpeed(speed) {
+  if (audioElement) {
+    audioElement.playbackRate = speed;
+  }
+}
+    
   </script>
 </body>
 </html>
